@@ -72,7 +72,7 @@ if (argv.v || argv.version) {
       error(new Error('Could not find device for ' + device))
     }
 
-    var mac = spoof.randomMAC(argv.local)
+    var mac = spoof.random(argv.local)
     setMACAddress(it.device, mac, it.port)
   })
 
@@ -101,7 +101,7 @@ if (argv.v || argv.version) {
 } else if (cmd === 'normalize') {
 
   var mac = argv._[1]
-  console.log(spoof.normalizeMAC(mac))
+  console.log(spoof.normalize(mac))
 
 } else {
 

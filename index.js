@@ -170,7 +170,7 @@ exports.setInterfaceMAC = function (device, mac, port) {
  * @param  {boolean} localAdmin  locally administered address
  * @return {string}
  */
-exports.randomMAC = function (localAdmin) {
+exports.random = function (localAdmin) {
   // By default use a random address in VMWare's MAC address
   // range used by VMWare VMs, which has a very slim chance of colliding
   // with existing devices.
@@ -199,7 +199,7 @@ exports.randomMAC = function (localAdmin) {
     .map(function (byte) {
       return zeroFill(byte.toString(16), 2)
     })
-    .join(':')
+    .join(':').toUpperCase()
 }
 
 /**
@@ -214,7 +214,7 @@ exports.randomMAC = function (localAdmin) {
  * @param  {string} mac
  * @return {string}
  */
-exports.normalizeMAC = function (mac) {
+exports.normalize = function (mac) {
   var m = CISCO_MAC_ADDRESS_RE.exec(mac)
   if (m) {
     var halfwords = m.slice(1)
@@ -225,7 +225,6 @@ exports.normalizeMAC = function (mac) {
   }
 
   m = MAC_ADDRESS_RE.exec(mac)
-  console.log(m)
   if (m) {
     var bytes = m.slice(1)
     return bytes
