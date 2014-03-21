@@ -22,6 +22,7 @@
   "engines": {
     "node": ">=0.11"
   },
+  "engineStrict": true,
   "homepage": "http://feross.org/spoofmac/",
   "keywords": [
     "spoof",
