@@ -19,6 +19,8 @@
   "devDependencies": {
     "tape": "^2.10.2"
   },
+  "engines": {
+    "node": ">=0.11"
   },
   "homepage": "http://feross.org/spoofmac/",
   "keywords": [

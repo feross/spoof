@@ -6,6 +6,8 @@ Easily spoof your MAC address in OS X, Windows & Linux!
 
 Node.js port of the popular Python utility [SpoofMAC](https://pypi.python.org/pypi/SpoofMAC/) (GitHub: [feross/SpoofMAC](https://github.com/feross/SpoofMAC)).
 
+**Requires Node 0.11+, because we need execSync.**
+
 (TODO: finish adding Windows / Linux support! Will do soon.)
 
 ### why?
