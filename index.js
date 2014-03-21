@@ -11,7 +11,7 @@ exports.MAC_ADDRESS_RE = MAC_ADDRESS_RE
 
 // Regex to validate a MAC address in cisco-style
 // Example: 0123.4567.89ab
-var CISCO_MAC_ADDRESS_RE = /([0-9A-F]{,4})\.([0-9A-F]{,4})\.([0-9A-F]{,4})/i
+var CISCO_MAC_ADDRESS_RE = /([0-9A-F]{0,4})\.([0-9A-F]{0,4})\.([0-9A-F]{0,4})/i
 
 // The possible port names for wireless devices as returned by networksetup.
 var WIRELESS_PORT_NAMES = ['wi-fi', 'airport']
@@ -129,6 +129,10 @@ exports.getInterfaceMAC = function (device) {
  * @param {string=} port
  */
 exports.setInterfaceMAC = function (device, mac, port) {
+  if (!MAC_ADDRESS_RE.exec(mac)) {
+    throw new Error(mac + ' is not a valid MAC address')
+  }
+
   if (port && port.toLowerCase().indexOf(WIRELESS_PORT_NAMES) >= 0) {
     // Turn on the device, assuming it's an airport device.
     try {
@@ -161,3 +165,113 @@ exports.setInterfaceMAC = function (device, mac, port) {
   }
 }
 
+/**
+ * Generates and returns a random MAC address.
+ * @param  {boolean} localAdmin  locally administered address
+ * @return {string}
+ */
+exports.randomMAC = function (localAdmin) {
+  // By default use a random address in VMWare's MAC address
+  // range used by VMWare VMs, which has a very slim chance of colliding
+  // with existing devices.
+  var mac = [
+    0x00,
+    0x05,
+    0x69,
+    random(0x00, 0x7f),
+    random(0x00, 0xff),
+    random(0x00, 0xff)
+  ]
+
+  if (localAdmin) {
+    // Universally administered and locally administered addresses are
+    // distinguished by setting the second least significant bit of the
+    // most significant byte of the address. If the bit is 0, the address
+    // is universally administered. If it is 1, the address is locally
+    // administered. In the example address 02-00-00-00-00-01 the most
+    // significant byte is 02h. The binary is 00000010 and the second
+    // least significant bit is 1. Therefore, it is a locally administered
+    // address.[3] The bit is 0 in all OUIs.
+    mac[0] |= 2
+  }
+
+  return mac
+    .map(function (byte) {
+      return zeroFill(byte.toString(16), 2)
+    })
+    .join(':')
+}
+
+/**
+ * Takes a MAC address in various formats:
+ *
+ *      - 00:00:00:00:00:00,
+ *      - 00-00-00-00-00-00,
+ *      - 0000.0000.0000
+ *
+ *  ... and returns it in the format 00:00:00:00:00:00.
+ *
+ * @param  {string} mac
+ * @return {string}
+ */
+exports.normalizeMAC = function (mac) {
+  var m = CISCO_MAC_ADDRESS_RE.exec(mac)
+  if (m) {
+    var halfwords = m.slice(1)
+    mac = halfwords.map(function (halfword) {
+      return zeroFill(halfword, 4)
+    }).join('')
+    return chunk(mac, 2).join(':').toUpperCase()
+  }
+
+  m = MAC_ADDRESS_RE.exec(mac)
+  console.log(m)
+  if (m) {
+    var bytes = m.slice(1)
+    return bytes
+      .map(function (byte) {
+        return zeroFill(byte, 2)
+      })
+      .join(':')
+      .toUpperCase()
+  }
+
+  // return None
+}
+
+function chunk (str, n) {
+  var arr = []
+  for (var i = 0; i < str.length; i += n) {
+    arr.push(str.slice(i, i + n))
+  }
+  return arr
+}
+
+/**
+ * Return a random integer between min and max (inclusive).
+ * @param  {number} min
+ * @param  {number=} max
+ * @return {number}
+ */
+function random (min, max) {
+  if (max == null) {
+    max = min
+    min = 0
+  }
+  return min + Math.floor(Math.random() * (max - min + 1))
+}
+
+/**
+ * Given a number, return a zero-filled string.
+ * From http://stackoverflow.com/questions/1267283/
+ * @param  {number} number
+ * @param  {number} width
+ * @return {string}
+ */
+function zeroFill (number, width) {
+  width -= number.toString().length;
+  if (width > 0) {
+    return new Array(width + (/\./.test(number) ? 2 : 1)).join('0') + number;
+  }
+  return number + ''; // always return a string
+}
