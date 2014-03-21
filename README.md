@@ -2,7 +2,7 @@
 
 Easily spoof your MAC address in OS X, Windows & Linux!
 
-![anonymous](img.png)
+![anonymous](https://raw.githubusercontent.com/feross/spoof/master/img.png)
 
 Node.js port of the popular Python utility [SpoofMAC](https://pypi.python.org/pypi/SpoofMAC/) (GitHub: [feross/SpoofMAC](https://github.com/feross/SpoofMAC)).
 
