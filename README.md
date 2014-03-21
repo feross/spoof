@@ -35,16 +35,16 @@ You can always see up-to-date usage instructions by running `spoof --help`.
 #### List available devices:
 
 ```bash
-spoof-mac list
 - "Ethernet" on device "en0" with MAC address 70:56:51:BE:B3:00
 - "Wi-Fi" on device "en1" with MAC address 70:56:51:BE:B3:01 currently set to 70:56:51:BE:B3:02
 - "Bluetooth PAN" on device "en1"
+spoof list
 ```
 
 #### List available devices, but only those on wifi:
 
 ```bash
-spoof-mac list --wifi
+spoof list --wifi
 - "Wi-Fi" on device "en0" with MAC address 70:56:51:BE:B3:6F
 ```
 
@@ -53,19 +53,19 @@ spoof-mac list --wifi
 You can use the hardware port name, such as:
 
 ```bash
-spoof-mac randomize wi-fi
+spoof randomize wi-fi
 ```
 
 or the device name, such as:
 
 ```bash
-spoof-mac randomize en0
+spoof randomize en0
 ```
 
 #### Set device MAC address to something specific *(requires root)*
 
 ```bash
-spoof-mac set 00:00:00:00:00:00 en0
+spoof set 00:00:00:00:00:00 en0
 ```
 
 #### Reset device to its original MAC address *(requires root)*
@@ -75,7 +75,7 @@ isn't available), you can try setting the MAC address of a device back
 to its burned-in address using `reset`:
 
 ```bash
-spoof-mac reset wi-fi
+spoof reset wi-fi
 ```
 
 (older versions of OS X may call it "airport" instead of "wi-fi")
