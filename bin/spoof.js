@@ -47,12 +47,32 @@ if (argv._.length === 0 || argv.h || argv.help) {
   }
 
 } else if (argv._[0] === 'set') {
+  var mac = argv._[1]
+  var devices = argv._.slice(2)
 
+  devices.forEach(function (target) {
+    var it = spoof.findInterface(target)
+    if (!it) {
+      error(new Error('Could not find device for ' + target))
+    }
+
+    if (!spoof.MAC_ADDRESS_RE.exec(mac)) {
+      error(new Error(mac + ' is not a valid MAC address'))
+    }
+
+    if (process.platform !== 'win32' && process.getuid() !== 0) {
+      error(new Error('Must run as root (or using sudo) to change network settings'))
+    }
+
+    spoof.setInterfaceMAC(it.device, mac, it.port)
+  })
 }
 
+/**
+ * Print error and terminate the program
+ * @param  {Error} err
+ */
 function error (err) {
-  console.error(err.message)
+  console.error(chalk.red('Error:', err.message))
   process.exit(-1)
 }
-
-// console.log(spoof.getInterfaceMAC('en0'))

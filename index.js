@@ -7,6 +7,7 @@ var PATH_TO_AIRPORT = '/System/Library/PrivateFrameworks/Apple80211.framework/Re
 // Regex to validate a MAC address
 // Example: 00-00-00-00-00-00 or 00:00:00:00:00:00 or 000000000000
 var MAC_ADDRESS_RE = /([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})/i
+exports.MAC_ADDRESS_RE = MAC_ADDRESS_RE
 
 // Regex to validate a MAC address in cisco-style
 // Example: 0123.4567.89ab
@@ -133,7 +134,7 @@ exports.setInterfaceMAC = function (device, mac, port) {
     try {
       cp.execSync(quote(['networksetup', '-setairportpower', device, 'on']))
     } catch (err) {
-      throw new Error('Error powering on wifi device')
+      throw new Error('Unable to power on wifi device')
     }
   }
 
@@ -141,21 +142,22 @@ exports.setInterfaceMAC = function (device, mac, port) {
   try {
     cp.execSync(quote([PATH_TO_AIRPORT, '-z']))
   } catch (err) {
-    throw new Error('Error disassociating from wifi networks')
+    throw new Error('Unable to disassociate from wifi networks')
   }
 
   // Change the MAC.
   try {
     cp.execSync(quote(['ifconfig', device, 'ether', mac]))
   } catch (err) {
-    throw new Error('Error changing MAC address')
+    throw new Error('Unable to change MAC address')
   }
 
   // Associate airport with known network (if any)
+  // Note: This does not work on OS X 10.9 due to changes in the Airport utility
   try {
     cp.execSync('networksetup -detectnewhardware')
   } catch (err) {
-    throw new Error('Error associating with known networks')
+    throw new Error('Unable to associate with known networks')
   }
 }
 
