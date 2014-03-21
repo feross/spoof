@@ -2,7 +2,7 @@
 
 Easily spoof your MAC address in OS X, Windows & Linux!
 
-![anonymous](https://raw.githubusercontent.com/feross/spoof/master/img.png)
+![anonymous](https://raw.githubusercontent.com/feross/spoof/master/img/img.png)
 
 Node.js port of the popular Python utility [SpoofMAC](https://pypi.python.org/pypi/SpoofMAC/) (GitHub: [feross/SpoofMAC](https://github.com/feross/SpoofMAC)).
 
@@ -35,10 +35,10 @@ You can always see up-to-date usage instructions by running `spoof --help`.
 #### List available devices:
 
 ```bash
+spoof list
 - "Ethernet" on device "en0" with MAC address 70:56:51:BE:B3:00
 - "Wi-Fi" on device "en1" with MAC address 70:56:51:BE:B3:01 currently set to 70:56:51:BE:B3:02
 - "Bluetooth PAN" on device "en1"
-spoof list
 ```
 
 #### List available devices, but only those on wifi:
