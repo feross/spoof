@@ -1,7 +1,7 @@
 {
   "name": "spoof",
   "description": "Easily spoof your MAC address in OS X & Linux",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "author": {
     "name": "Feross Aboukhadijeh",
     "email": "feross@feross.org",
