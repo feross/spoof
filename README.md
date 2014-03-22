@@ -8,7 +8,7 @@ Node.js port of the popular Python utility [SpoofMAC](https://pypi.python.org/py
 
 **Requires Node 0.11+, because we need execSync.**
 
-(TODO: finish adding Windows / Linux support! Will do soon.)
+(TODO: finish adding Windows support! Working on it now.)
 
 ### why?
 
@@ -83,7 +83,7 @@ spoof reset wi-fi
 On OS X, another option to reset your MAC address is to simply restart your
 computer. OS X doesn't preserve changes to your MAC address between restarts.
 
-### i want to automatically set my MAC address on startup
+### automatically set my MAC address on startup
 
 If you want to set your MAC address and have it persist between restarts on
 OS X, consider using the Python version of this program,

@@ -30,61 +30,128 @@ exports.findInterfaces = function (targets) {
     return target.toLowerCase()
   })
 
-  // Parse the output of `networksetup -listallhardwareports` which gives
-  // us 3 fields per port:
-  // - the port name,
-  // - the device associated with this port, if any,
-  // - the MAC address, if any, otherwise 'N/A'
-  var output
-  try {
-    output = cp.execSync('networksetup -listallhardwareports').toString()
-  } catch (err) {
-    throw err
-  }
-  var details = []
-  while (true) {
-    var result = /(?:Hardware Port|Device|Ethernet Address): (.+)/.exec(output)
-    if (!result || !result[1]) {
-      break
+  var output, interfaces, details, result, i, port, device, address, it, j, target
+
+  if (process.platform === 'darwin') {
+
+    // Parse the output of `networksetup -listallhardwareports` which gives
+    // us 3 fields per port:
+    // - the port name,
+    // - the device associated with this port, if any,
+    // - the MAC address, if any, otherwise 'N/A'
+
+    try {
+      output = cp.execSync('networksetup -listallhardwareports').toString()
+    } catch (err) {
+      throw err
     }
-    details.push(result[1])
-    output = output.slice(result.index + result[1].length)
-  }
-
-  var interfaces = []; // to return
-
-  // Split the results into chunks of 3 (for our three fields) and yield
-  // those that match `targets`.
-  for (var i = 0; i < details.length; i += 3) {
-    var port = details[i]
-    var device = details[i + 1]
-    var address = details[i + 2]
-
-    address = MAC_ADDRESS_RE.exec(address.toUpperCase())
-    if (address) {
-      address = address[0]
-    }
-
-    var it = {
-      address: address,
-      currentAddress: exports.getInterfaceMAC(device),
-      device: device,
-      port: port
-    }
-
-    if (targets.length === 0) {
-      // Not trying to match anything in particular, return everything.
-      interfaces.push(it)
-      continue
-    }
-
-    for (var j = 0; j < targets.length; j++) {
-      var target = targets[j]
-      if (target === port.toLowerCase() || target === device.toLowerCase()) {
-        interfaces.push(it)
+    details = []
+    while (true) {
+      result = /(?:Hardware Port|Device|Ethernet Address): (.+)/.exec(output)
+      if (!result || !result[1]) {
         break
       }
+      details.push(result[1])
+      output = output.slice(result.index + result[1].length)
     }
+
+    interfaces = [] // to return
+
+    // Split the results into chunks of 3 (for our three fields) and yield
+    // those that match `targets`.
+    for (i = 0; i < details.length; i += 3) {
+      port = details[i]
+      device = details[i + 1]
+      address = details[i + 2]
+
+      address = MAC_ADDRESS_RE.exec(address.toUpperCase())
+      if (address) {
+        address = exports.normalize(address[0])
+      }
+
+      it = {
+        address: address,
+        currentAddress: exports.getInterfaceMAC(device),
+        device: device,
+        port: port
+      }
+
+      if (targets.length === 0) {
+        // Not trying to match anything in particular, return everything.
+        interfaces.push(it)
+        continue
+      }
+
+      for (j = 0; j < targets.length; j++) {
+        target = targets[j]
+        if (target === port.toLowerCase() || target === device.toLowerCase()) {
+          interfaces.push(it)
+          break
+        }
+      }
+    }
+
+  } else if (process.platform === 'linux') {
+
+    // Parse the output of `ifconfig` which gives us:
+    // - the adapter description
+    // - the adapter name/device associated with this, if any,
+    // - the MAC address, if any
+    try {
+      output = cp.execSync('ifconfig', { stdio: 'pipe' }).toString()
+    } catch (err) {
+      throw err
+    }
+
+    details = []
+    while (true) {
+      result = /(.*?)HWaddr(.*)/mi.exec(output)
+      if (!result || !result[1] || !result[2]) {
+        break
+      }
+      details.push(result[1], result[2])
+      output = output.slice(result.index + result[0].length)
+    }
+
+    interfaces = []
+
+    for (i = 0; i < details.length; i += 2) {
+      var s = details[i].split(':')
+      if (s.length >= 2) {
+        device = s[0].split(' ')[0]
+        port = s[1].trim()
+      }
+
+      address = details[i + 1].trim()
+      if (address) {
+        address = exports.normalize(address)
+      }
+
+      it = {
+        address: address,
+        currentAddress: exports.getInterfaceMAC(device),
+        device: device,
+        port: port
+      }
+
+      if (targets.length === 0) {
+        // Not trying to match anything in particular, return everything.
+        interfaces.push(it)
+        continue
+      }
+
+      for (j = 0; j < targets.length; j++) {
+        target = targets[j]
+        if (target === port.toLowerCase() || target === device.toLowerCase()) {
+          interfaces.push(it)
+          break
+        }
+      }
+
+    }
+
+  } else if (process.platform === 'windows') {
+
   }
 
   return interfaces
@@ -106,15 +173,22 @@ exports.findInterface = function (target) {
  * @return {string}
  */
 exports.getInterfaceMAC = function (device) {
-  var output
-  try {
-    output = cp.execSync(quote(['ifconfig', device]), { stdio: 'pipe' }).toString()
-  } catch (err) {
-    return null
-  }
+  var output, address
 
-  var address = MAC_ADDRESS_RE.exec(output.toUpperCase())
-  return address && address[0]
+  if (process.platform === 'darwin' || process.platform === 'linux') {
+
+    try {
+      output = cp.execSync(quote(['ifconfig', device]), { stdio: 'pipe' }).toString()
+    } catch (err) {
+      return null
+    }
+
+    address = MAC_ADDRESS_RE.exec(output)
+    return address && exports.normalize(address[0])
+
+  } else if (process.platform === 'windows') {
+
+  }
 }
 
 /**
@@ -133,35 +207,52 @@ exports.setInterfaceMAC = function (device, mac, port) {
     throw new Error(mac + ' is not a valid MAC address')
   }
 
-  if (port && port.toLowerCase().indexOf(WIRELESS_PORT_NAMES) >= 0) {
-    // Turn on the device, assuming it's an airport device.
-    try {
-      cp.execSync(quote(['networksetup', '-setairportpower', device, 'on']))
-    } catch (err) {
-      throw new Error('Unable to power on wifi device')
+  if (process.platform === 'darwin') {
+
+    if (port && port.toLowerCase().indexOf(WIRELESS_PORT_NAMES) >= 0) {
+      // Turn on the device, assuming it's an airport device.
+      try {
+        cp.execSync(quote(['networksetup', '-setairportpower', device, 'on']))
+      } catch (err) {
+        throw new Error('Unable to power on wifi device')
+      }
     }
-  }
 
-  // For some reason this seems to be required even when changing a non-airport device.
-  try {
-    cp.execSync(quote([PATH_TO_AIRPORT, '-z']))
-  } catch (err) {
-    throw new Error('Unable to disassociate from wifi networks')
-  }
+    // For some reason this seems to be required even when changing a non-airport device.
+    try {
+      cp.execSync(quote([PATH_TO_AIRPORT, '-z']))
+    } catch (err) {
+      throw new Error('Unable to disassociate from wifi networks')
+    }
 
-  // Change the MAC.
-  try {
-    cp.execSync(quote(['ifconfig', device, 'ether', mac]))
-  } catch (err) {
-    throw new Error('Unable to change MAC address')
-  }
+    // Change the MAC.
+    try {
+      cp.execSync(quote(['ifconfig', device, 'ether', mac]))
+    } catch (err) {
+      throw new Error('Unable to change MAC address')
+    }
 
-  // Associate airport with known network (if any)
-  // Note: This does not work on OS X 10.9 due to changes in the Airport utility
-  try {
-    cp.execSync('networksetup -detectnewhardware')
-  } catch (err) {
-    throw new Error('Unable to associate with known networks')
+    // Associate airport with known network (if any)
+    // Note: This does not work on OS X 10.9 due to changes in the Airport utility
+    try {
+      cp.execSync('networksetup -detectnewhardware')
+    } catch (err) {
+      throw new Error('Unable to associate with known networks')
+    }
+
+  } else if (process.platform === 'linux') {
+
+    // Set the device's mac address.
+    // Handles shutting down and starting back up interface.
+    try {
+      cp.execSync(quote(['ifconfig', device, 'down', 'hw', 'ether', mac]))
+      cp.execSync(quote(['ifconfig', device, 'up']))
+    } catch (err) {
+      throw new Error('Unable to change MAC address')
+    }
+
+  } else if (process.platform === 'win32') {
+
   }
 }
 
