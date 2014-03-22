@@ -6,8 +6,6 @@ Easily spoof your MAC address in OS X & Linux!
 
 Node.js port of the popular Python utility [SpoofMAC](https://pypi.python.org/pypi/SpoofMAC/) (GitHub: [feross/SpoofMAC](https://github.com/feross/SpoofMAC)).
 
-**Requires Node 0.11+, because we need execSync.**
-
 ### why?
 
 I made this because changing your MAC address in OS X is harder than it should be. The Wi-Fi card needs to be manually disassociated from any connected networks in order for the change to apply correctly – super annoying! Doing this manually each time is tedious and lame.
@@ -15,6 +13,8 @@ I made this because changing your MAC address in OS X is harder than it should b
 Instead, just run `spoof` and change your MAC address in one command. Now for Linux, too!
 
 ### usage
+
+**Requires Node 0.11+, because we need execSync.**
 
 1. Install it globally.
 
