@@ -14,15 +14,16 @@
   "dependencies": {
     "chalk": "^0.4.0",
     "minimist": "0.0.8",
-    "shell-quote": "^1.4.1"
+    "shell-quote": "^1.4.1",
+    "zero-fill": "^1.0.0"
   },
   "devDependencies": {
     "tape": "^2.10.2"
   },
+  "engineStrict": true,
   "engines": {
     "node": ">=0.11"
   },
-  "engineStrict": true,
   "homepage": "http://feross.org/spoofmac/",
   "keywords": [
     "spoof",

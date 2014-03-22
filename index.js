@@ -1,5 +1,6 @@
 var cp = require('child_process')
 var quote = require('shell-quote').quote
+var zeroFill = require('zero-fill')
 
 // Path to Airport binary on 10.7, 10.8, and 10.9 (might be different on older OS X)
 var PATH_TO_AIRPORT = '/System/Library/PrivateFrameworks/Apple80211.framework/Resources/airport'
@@ -349,19 +350,4 @@ function random (min, max) {
     min = 0
   }
   return min + Math.floor(Math.random() * (max - min + 1))
-}
-
-/**
- * Given a number, return a zero-filled string.
- * From http://stackoverflow.com/questions/1267283/
- * @param  {number} number
- * @param  {number} width
- * @return {string}
- */
-function zeroFill (number, width) {
-  width -= number.toString().length;
-  if (width > 0) {
-    return new Array(width + (/\./.test(number) ? 2 : 1)).join('0') + number;
-  }
-  return number + ''; // always return a string
 }
