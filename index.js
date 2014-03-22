@@ -8,7 +8,6 @@ var PATH_TO_AIRPORT = '/System/Library/PrivateFrameworks/Apple80211.framework/Re
 // Regex to validate a MAC address
 // Example: 00-00-00-00-00-00 or 00:00:00:00:00:00 or 000000000000
 var MAC_ADDRESS_RE = /([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})/i
-exports.MAC_ADDRESS_RE = MAC_ADDRESS_RE
 
 // Regex to validate a MAC address in cisco-style
 // Example: 0123.4567.89ab
