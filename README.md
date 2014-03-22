@@ -1,6 +1,6 @@
 # spoof [![Build Status](http://img.shields.io/travis/feross/spoof.svg)](https://travis-ci.org/feross/spoof) [![npm](http://img.shields.io/npm/v/spoof.svg)](https://npmjs.org/package/spoof) [![npm](http://img.shields.io/npm/dm/spoof.svg)](https://npmjs.org/package/spoof)
 
-Easily spoof your MAC address in OS X, Windows & Linux!
+Easily spoof your MAC address in OS X & Linux!
 
 ![anonymous](https://raw.githubusercontent.com/feross/spoof/master/img/img.png)
 
@@ -8,13 +8,11 @@ Node.js port of the popular Python utility [SpoofMAC](https://pypi.python.org/py
 
 **Requires Node 0.11+, because we need execSync.**
 
-(TODO: finish adding Windows support! Working on it now.)
-
 ### why?
 
 I made this because changing your MAC address in OS X is harder than it should be. The Wi-Fi card needs to be manually disassociated from any connected networks in order for the change to apply correctly – super annoying! Doing this manually each time is tedious and lame.
 
-Instead, just run `spoof` and change your MAC address in one command. Now for Windows and Linux, too!
+Instead, just run `spoof` and change your MAC address in one command. Now for Linux, too!
 
 ### usage
 
@@ -82,6 +80,14 @@ spoof reset wi-fi
 
 On OS X, another option to reset your MAC address is to simply restart your
 computer. OS X doesn't preserve changes to your MAC address between restarts.
+
+### windows support?
+
+If you need Windows support, consider using the Python version of this program,
+[SpoofMAC](https://github.com/feross/SpoofMAC). Or, please send a PR with Windows
+support and I'll accept it. You can see how it's implemented in the Python version
+[here](https://github.com/feross/SpoofMAC/blob/master/spoofmac/interface.py#L113).
+Thanks!
 
 ### automatically set my MAC address on startup
 
