@@ -7,7 +7,9 @@
     "email": "feross@feross.org",
     "url": "http://feross.org/"
   },
-  "bin": "./bin/spoof.js",
+  "bin": {
+    "spoof": "./bin/spoof.js"
+  },
   "bugs": {
     "url": "https://github.com/feross/spoof/issues"
   },
