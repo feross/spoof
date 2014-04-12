@@ -104,22 +104,21 @@ if (argv.v || argv.version) {
   console.log(spoof.normalize(mac))
 
 } else {
-
-  console.log(
-    'SpoofMAC - Easily spoof your MAC address in OS X, Windows & Linux\n\n' +
-    'Usage:\n\n' +
-    '  spoof list [--wifi]                     List available devices.\n' +
-    '  spoof set <mac> <devices>...            Set device MAC address.\n' +
-    '  spoof randomize [--local] <devices>...  Set device MAC address randomly.\n' +
-    '  spoof reset <devices>...                Reset device MAC address to default.\n' +
-    '  spoof normalize <mac>                   Given a MAC address, normalize it.\n' +
-    '  spoof --help | -h                       Shows this help message.\n' +
-    '  spoof --version | -v                    Show package version.\n\n' +
-    'Options:\n\n' +
-    '  --wifi          Try to only show wireless interfaces.\n' +
-    '  --local         Set the locally administered flag on randomized MACs.\n'
-  )
-
+  console.log('SpoofMAC - Easily spoof your MAC address in OS X & Linux')
+  console.log('')
+  console.log('Usage:')
+  console.log('  spoof list [--wifi]                     List available devices.')
+  console.log('  spoof set <mac> <devices>...            Set device MAC address.')
+  console.log('  spoof randomize [--local] <devices>...  Set device MAC address randomly.')
+  console.log('  spoof reset <devices>...                Reset device MAC address to default.')
+  console.log('  spoof normalize <mac>                   Given a MAC address, normalize it.')
+  console.log('  spoof --help | -h                       Shows this help message.')
+  console.log('  spoof --version | -v                    Show package version.')
+  console.log('')
+  console.log('Options:')
+  console.log('  --wifi          Try to only show wireless interfaces.')
+  console.log('  --local         Set the locally administered flag on randomized MACs.')
+  console.log('')
 }
 
 function setMACAddress (device, mac, port) {
