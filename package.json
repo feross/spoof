@@ -8,7 +8,7 @@
     "url": "http://feross.org/"
   },
   "bin": {
-    "spoof": "./bin/spoof.js"
+    "spoof": "./bin/cmd.js"
   },
   "bugs": {
     "url": "https://github.com/feross/spoof/issues"
