@@ -2,6 +2,24 @@ var cp = require('child_process')
 var quote = require('shell-quote').quote
 var zeroFill = require('zero-fill')
 
+var execSync
+if (cp.execSync) {
+  execSync = cp.execSync.bind(cp)
+} else {
+  try {
+    var sh = require('execSync')
+    execSync = function (cmd) {
+      return sh.exec(cmd).stdout
+    }
+  } catch (err) {
+    console.error(
+      'Missing execSync. Use at least node v0.11.12, or run on a platform where the ' +
+      '`execSync` module works. See https://www.npmjs.org/package/execSync'
+    )
+    process.exit(1)
+  }
+}
+
 // Path to Airport binary on 10.7, 10.8, and 10.9 (might be different on older OS X)
 var PATH_TO_AIRPORT = '/System/Library/PrivateFrameworks/Apple80211.framework/Resources/airport'
 
@@ -41,7 +59,7 @@ exports.findInterfaces = function (targets) {
     // - the MAC address, if any, otherwise 'N/A'
 
     try {
-      output = cp.execSync('networksetup -listallhardwareports').toString()
+      output = execSync('networksetup -listallhardwareports').toString()
     } catch (err) {
       throw err
     }
@@ -98,7 +116,7 @@ exports.findInterfaces = function (targets) {
     // - the adapter name/device associated with this, if any,
     // - the MAC address, if any
     try {
-      output = cp.execSync('ifconfig', { stdio: 'pipe' }).toString()
+      output = execSync('ifconfig', { stdio: 'pipe' }).toString()
     } catch (err) {
       throw err
     }
@@ -178,7 +196,7 @@ exports.getInterfaceMAC = function (device) {
   if (process.platform === 'darwin' || process.platform === 'linux') {
 
     try {
-      output = cp.execSync(quote(['ifconfig', device]), { stdio: 'pipe' }).toString()
+      output = execSync(quote(['ifconfig', device]), { stdio: 'pipe' }).toString()
     } catch (err) {
       return null
     }
@@ -212,7 +230,7 @@ exports.setInterfaceMAC = function (device, mac, port) {
     if (port && port.toLowerCase().indexOf(WIRELESS_PORT_NAMES) >= 0) {
       // Turn on the device, assuming it's an airport device.
       try {
-        cp.execSync(quote(['networksetup', '-setairportpower', device, 'on']))
+        execSync(quote(['networksetup', '-setairportpower', device, 'on']))
       } catch (err) {
         throw new Error('Unable to power on wifi device')
       }
@@ -220,14 +238,14 @@ exports.setInterfaceMAC = function (device, mac, port) {
 
     // For some reason this seems to be required even when changing a non-airport device.
     try {
-      cp.execSync(quote([PATH_TO_AIRPORT, '-z']))
+      execSync(quote([PATH_TO_AIRPORT, '-z']))
     } catch (err) {
       throw new Error('Unable to disassociate from wifi networks')
     }
 
     // Change the MAC.
     try {
-      cp.execSync(quote(['ifconfig', device, 'ether', mac]))
+      execSync(quote(['ifconfig', device, 'ether', mac]))
     } catch (err) {
       throw new Error('Unable to change MAC address')
     }
@@ -235,7 +253,7 @@ exports.setInterfaceMAC = function (device, mac, port) {
     // Associate airport with known network (if any)
     // Note: This does not work on OS X 10.9 due to changes in the Airport utility
     try {
-      cp.execSync('networksetup -detectnewhardware')
+      execSync('networksetup -detectnewhardware')
     } catch (err) {
       throw new Error('Unable to associate with known networks')
     }
@@ -245,8 +263,8 @@ exports.setInterfaceMAC = function (device, mac, port) {
     // Set the device's mac address.
     // Handles shutting down and starting back up interface.
     try {
-      cp.execSync(quote(['ifconfig', device, 'down', 'hw', 'ether', mac]))
-      cp.execSync(quote(['ifconfig', device, 'up']))
+      execSync(quote(['ifconfig', device, 'down', 'hw', 'ether', mac]))
+      execSync(quote(['ifconfig', device, 'up']))
     } catch (err) {
       throw new Error('Unable to change MAC address')
     }

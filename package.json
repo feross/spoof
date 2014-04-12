@@ -22,10 +22,6 @@
   "devDependencies": {
     "tape": "^2.10.2"
   },
-  "engineStrict": true,
-  "engines": {
-    "node": ">=0.11"
-  },
   "homepage": "http://feross.org/spoofmac/",
   "keywords": [
     "spoof",
@@ -42,6 +38,9 @@
   ],
   "license": "MIT",
   "main": "index.js",
+  "optionalDependencies": {
+    "execSync": "^1.0.1-pre"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/feross/spoof.git"

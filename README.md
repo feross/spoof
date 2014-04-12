@@ -14,8 +14,6 @@ Instead, just run `spoof` and change your MAC address in one command. Now for Li
 
 ### usage
 
-**Requires Node 0.11+, because we need execSync.**
-
 1. Install it globally.
 
   ```bash
