@@ -2,7 +2,7 @@
 
 #### Easily spoof your MAC address in OS X & Linux!
 
-![anonymous](https://raw.githubusercontent.com/feross/spoof/master/img/img.png)
+![anonymous](img/img.png)
 
 Node.js port of the popular Python utility [SpoofMAC](https://pypi.python.org/pypi/SpoofMAC/) (GitHub: [feross/SpoofMAC](https://github.com/feross/SpoofMAC)).
 
@@ -18,16 +18,18 @@ Here are some easy install instructions for complete beginners.
 
 1. Install [node.js](http://nodejs.org/) (it's a programming platform like Python, Java, etc.)
 
-2. Open the **Terminal** app. Let's use Spotlight to find it.
+2. Open **Terminal**. Let's use Spotlight to find it.
+
+  ![terminal](img/spotlight-terminal.png)
 
 3. Install **spoof** by typing this command and pressing `Enter`.
 
   ```bash
   sudo npm install spoof -g
   ```
-  
+
   That's it! **spoof** is installed.
-  
+
 3. Now, let's print out the **help page**. Just like before, run this command in **Terminal**.
 
   ```bash
