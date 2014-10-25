@@ -12,21 +12,49 @@ I made this because changing your MAC address in OS X is harder than it should b
 
 Instead, just run `spoof` and change your MAC address in one command. Now for Linux, too!
 
-### usage
+### instructions for beginners
 
-1. Install it globally.
+Here are some easy install instructions for complete beginners.
+
+1. Install [node.js](http://nodejs.org/) (it's a programming platform like Python, Java, etc.)
+
+2. Open the **Terminal** app. Let's use Spotlight to find it.
+
+3. Install **spoof** by typing this command and pressing `Enter`.
 
   ```bash
-  npm install -g spoof
+  sudo npm install spoof -g
+  ```
+  
+  That's it! **spoof** is installed.
+  
+3. Now, let's print out the **help page**. Just like before, run this command in **Terminal**.
+
+  ```bash
+  spoof --help
   ```
 
-2. Run it. Let's list all network interfaces!
+4. Now, let's print out all our network devices.
 
   ```bash
   spoof list
   ```
 
-You can always see up-to-date usage instructions by running `spoof --help`.
+5. Find the device you want to set or randomize the MAC address for in the list. Wi-Fi is usually called `en0` on modern Macs. Then, run this command:
+
+  ```bash
+  sudo spoof randomize en0
+  ```
+
+  You may need to reconnect to the Wi-Fi hotspot you were connected to. But, that's it! Your MAC address is changed. You can confirm by re-running:
+
+   ```bash
+   spoof list
+   ```
+
+### full command list
+
+You can always see up-to-date usage instructions by running spoof --help.
 
 #### List available devices:
 
