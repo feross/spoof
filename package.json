@@ -14,7 +14,7 @@
     "url": "https://github.com/feross/spoof/issues"
   },
   "dependencies": {
-    "chalk": "^0.4.0",
+    "chalk": "^1.0.0",
     "minimist": "0.0.8",
     "shell-quote": "^1.4.1",
     "zero-fill": "^1.0.0"
