@@ -38,9 +38,6 @@
   ],
   "license": "MIT",
   "main": "index.js",
-  "optionalDependencies": {
-    "execSync": "^1.0.1-pre"
-  },
   "repository": {
     "type": "git",
     "url": "git://github.com/feross/spoof.git"
