@@ -17,7 +17,7 @@
     "chalk": "^1.0.0",
     "minimist": "0.0.8",
     "shell-quote": "^1.4.1",
-    "zero-fill": "^1.0.0"
+    "zero-fill": "^2.1.0"
   },
   "devDependencies": {
     "tape": "^2.10.2"

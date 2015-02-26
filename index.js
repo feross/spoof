@@ -293,7 +293,7 @@ exports.random = function (localAdmin) {
 
   return mac
     .map(function (byte) {
-      return zeroFill(byte.toString(16), 2)
+      return zeroFill(2, byte.toString(16))
     })
     .join(':').toUpperCase()
 }
@@ -315,7 +315,7 @@ exports.normalize = function (mac) {
   if (m) {
     var halfwords = m.slice(1)
     mac = halfwords.map(function (halfword) {
-      return zeroFill(halfword, 4)
+      return zeroFill(4, halfword)
     }).join('')
     return chunk(mac, 2).join(':').toUpperCase()
   }
@@ -325,7 +325,7 @@ exports.normalize = function (mac) {
     var bytes = m.slice(1)
     return bytes
       .map(function (byte) {
-        return zeroFill(byte, 2)
+        return zeroFill(2, byte)
       })
       .join(':')
       .toUpperCase()
