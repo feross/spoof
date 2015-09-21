@@ -20,6 +20,7 @@
     "zero-fill": "^2.1.0"
   },
   "devDependencies": {
+    "standard": "^5.3.1",
     "tape": "^4.0.0"
   },
   "homepage": "http://feross.org/spoofmac/",
@@ -43,6 +44,6 @@
     "url": "git://github.com/feross/spoof.git"
   },
   "scripts": {
-    "test": "tape test/*.js"
+    "test": "standard && tape test/*.js"
   }
 }
