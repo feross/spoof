@@ -267,13 +267,26 @@ exports.setInterfaceMAC = function (device, mac, port) {
  * @return {string}
  */
 exports.random = function (localAdmin) {
-  // By default use a random address in VMWare's MAC address
-  // range used by VMWare VMs, which has a very slim chance of colliding
-  // with existing devices.
+  // Randomly assign a VM vendor's MAC address prefix, which should
+  // decrease chance of colliding with existing device's addresses.
+
+  var vendors = [
+    [ 0x00, 0x05, 0x69 ], // VMware
+    [ 0x00, 0x50, 0x56 ], // VMware
+    [ 0x00, 0x0C, 0x29 ], // VMware
+    [ 0x00, 0x16, 0x3E ], // Xen
+    [ 0x00, 0x03, 0xFF ], // Microsoft Hyper-V, Virtual Server, Virtual PC
+    [ 0x00, 0x1C, 0x42 ], // Parallels
+    [ 0x00, 0x0F, 0x4B ], // Virtual Iron 4
+    [ 0x08, 0x00, 0x27 ]  // Sun Virtual Box
+  ]
+
+  var vendor = vendors[Math.floor(Math.random() * vendors.length)]
+
   var mac = [
-    0x00,
-    0x05,
-    0x69,
+    vendor[0],
+    vendor[1],
+    vendor[2],
     random(0x00, 0x7f),
     random(0x00, 0xff),
     random(0x00, 0xff)
