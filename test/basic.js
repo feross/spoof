@@ -1,7 +1,6 @@
 var spoof = require('../')
 var test = require('tape')
 
-
 test('spoof.normalize()', function (t) {
   t.equal(spoof.normalize('00:00:00:00:00:00'), '00:00:00:00:00:00')
   t.equal(spoof.normalize('00-00-00-00-00-00'), '00:00:00:00:00:00')

@@ -8,11 +8,11 @@ var argv = minimist(process.argv.slice(2))
 var cmd = argv._[0]
 
 if (argv.v || argv.version) {
-
   console.log(require('../package.json').version)
+  process.exit(0)
+}
 
-} else if (cmd === 'list' || cmd === 'ls') {
-
+if (cmd === 'list' || cmd === 'ls') {
   var targets = []
   if (argv.wifi) {
     targets = spoof.WIRELESS_PORT_NAMES
@@ -36,11 +36,13 @@ if (argv.v || argv.version) {
     }
     console.log(line.join(' '))
   })
+  process.exit(0)
+}
 
-} else if (cmd === 'set') {
-
-  var mac = argv._[1]
-  var devices = argv._.slice(2)
+var devices, mac
+if (cmd === 'set') {
+  mac = argv._[1]
+  devices = argv._.slice(2)
 
   devices.forEach(function (device) {
     var it
@@ -56,10 +58,11 @@ if (argv.v || argv.version) {
 
     setMACAddress(it.device, mac, it.port)
   })
+  process.exit(0)
+}
 
-} else if (cmd === 'randomize') {
-
-  var devices = argv._.slice(1)
+if (cmd === 'randomize') {
+  devices = argv._.slice(1)
   devices.forEach(function (device) {
     var it
     try {
@@ -75,10 +78,11 @@ if (argv.v || argv.version) {
     var mac = spoof.random(argv.local)
     setMACAddress(it.device, mac, it.port)
   })
+  process.exit(0)
+}
 
-} else if (cmd === 'reset') {
-
-  var devices = argv._.slice(1)
+if (cmd === 'reset') {
+  devices = argv._.slice(1)
   devices.forEach(function (device) {
     var it
     try {
@@ -97,13 +101,18 @@ if (argv.v || argv.version) {
 
     setMACAddress(it.device, it.address, it.port)
   })
+  process.exit(9)
+}
 
-} else if (cmd === 'normalize') {
-
-  var mac = argv._[1]
+if (cmd === 'normalize') {
+  mac = argv._[1]
   console.log(spoof.normalize(mac))
+  process.exit(0)
+}
 
-} else {
+printHelp()
+
+function printHelp () {
   console.log('SpoofMAC - Easily spoof your MAC address in OS X & Linux')
   console.log('')
   console.log('Usage:')

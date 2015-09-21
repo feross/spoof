@@ -38,7 +38,6 @@ exports.findInterfaces = function (targets) {
   var output, interfaces, details, result, i, port, device, address, it, j, target
 
   if (process.platform === 'darwin') {
-
     // Parse the output of `networksetup -listallhardwareports` which gives
     // us 3 fields per port:
     // - the port name,
@@ -95,9 +94,7 @@ exports.findInterfaces = function (targets) {
         }
       }
     }
-
   } else if (process.platform === 'linux') {
-
     // Parse the output of `ifconfig` which gives us:
     // - the adapter description
     // - the adapter name/device associated with this, if any,
@@ -152,11 +149,9 @@ exports.findInterfaces = function (targets) {
           break
         }
       }
-
     }
-
-  } else if (process.platform === 'windows') {
-
+  } else if (process.platform === 'win32') {
+    console.error('No windows support yet - PR welcome!')
   }
 
   return interfaces
@@ -181,7 +176,6 @@ exports.getInterfaceMAC = function (device) {
   var output, address
 
   if (process.platform === 'darwin' || process.platform === 'linux') {
-
     try {
       output = cp.execSync(quote(['ifconfig', device]), { stdio: 'pipe' }).toString()
     } catch (err) {
@@ -190,9 +184,8 @@ exports.getInterfaceMAC = function (device) {
 
     address = MAC_ADDRESS_RE.exec(output)
     return address && exports.normalize(address[0])
-
-  } else if (process.platform === 'windows') {
-
+  } else if (process.platform === 'win32') {
+    console.error('No windows support yet - PR welcome!')
   }
 }
 
@@ -213,7 +206,6 @@ exports.setInterfaceMAC = function (device, mac, port) {
   }
 
   if (process.platform === 'darwin') {
-
     if (port && port.toLowerCase().indexOf(WIRELESS_PORT_NAMES) >= 0) {
       // Turn on the device, assuming it's an airport device.
       try {
@@ -244,9 +236,7 @@ exports.setInterfaceMAC = function (device, mac, port) {
     } catch (err) {
       throw new Error('Unable to associate with known networks')
     }
-
   } else if (process.platform === 'linux') {
-
     // Set the device's mac address.
     // Handles shutting down and starting back up interface.
     try {
@@ -255,9 +245,8 @@ exports.setInterfaceMAC = function (device, mac, port) {
     } catch (err) {
       throw new Error('Unable to change MAC address')
     }
-
   } else if (process.platform === 'win32') {
-
+    console.error('No windows support yet - PR welcome!')
   }
 }
 
