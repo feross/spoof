@@ -1,4 +1,4 @@
-# spoof [![Build Status](https://img.shields.io/travis/feross/spoof.svg)](https://travis-ci.org/feross/spoof) [![npm](https://img.shields.io/npm/v/spoof.svg)](https://npmjs.org/package/spoof)
+# spoof [![Build Status](https://img.shields.io/travis/feross/spoof/master.svg)](https://travis-ci.org/feross/spoof) [![npm](https://img.shields.io/npm/v/spoof.svg)](https://npmjs.org/package/spoof)
 
 #### Easily spoof your MAC address in OS X & Linux!
 
