@@ -1,6 +1,7 @@
 var cp = require('child_process')
 var quote = require('shell-quote').quote
 var zeroFill = require('zero-fill')
+var Winreg = require('winreg')
 
 if (!cp.execSync) {
   console.error('Error: Missing child_process.execSync. Please use node 0.12 or iojs.')
@@ -9,6 +10,9 @@ if (!cp.execSync) {
 
 // Path to Airport binary on 10.7, 10.8, and 10.9 (might be different on older OS X)
 var PATH_TO_AIRPORT = '/System/Library/PrivateFrameworks/Apple80211.framework/Resources/airport'
+
+// Windows registry key for interface MAC. Checked on Windows 7
+var WIN_REGISTRY_PATH = '\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}'
 
 // Regex to validate a MAC address
 // Example: 00-00-00-00-00-00 or 00:00:00:00:00:00 or 000000000000
@@ -35,7 +39,7 @@ exports.findInterfaces = function (targets) {
     return target.toLowerCase()
   })
 
-  var output, interfaces, details, result, i, port, device, address, it, j, target
+  var output, interfaces, details, result, i, port, device, address, it, j, target, lines
 
   if (process.platform === 'darwin') {
     // Parse the output of `networksetup -listallhardwareports` which gives
@@ -151,7 +155,66 @@ exports.findInterfaces = function (targets) {
       }
     }
   } else if (process.platform === 'win32') {
-    console.error('No windows support yet - PR welcome!')
+    try {
+      output = cp.execSync('ipconfig /all', { stdio: 'pipe' }).toString()
+    } catch (err) {
+      throw err
+    }
+
+    details = []
+    interfaces = []
+    lines = output.split('\n')
+    it = false
+    for (i = 0; i < lines.length; i++) {
+      // Check if new device
+      if (lines[i].substr(0, 1).match(/[A-Z]/)) {
+        if (it) {
+          if (targets.length === 0) {
+            // Not trying to match anything in particular, return everything.
+            interfaces.push(it)
+          } else {
+            for (j = 0; j < targets.length; j++) {
+              target = targets[j]
+              if (target === it.port.toLowerCase() || target === it.device.toLowerCase()) {
+                interfaces.push(it)
+                break
+              }
+            }
+          }
+        }
+
+        it = {
+          port: '',
+          device: ''
+        }
+
+        result = /adapter (.+?):/.exec(lines[ i ])
+        if (!result) {
+          continue
+        }
+
+        it.device = result[1]
+      }
+
+      if (!it) {
+        continue
+      }
+
+      // Try to find address
+      result = /Physical Address.+?:(.*)/mi.exec(lines[i])
+      if (result) {
+        it.address = exports.normalize(result[1].trim())
+        it.currentAddress = it.address
+        continue
+      }
+
+      // Try to find description
+      result = /description.+?:(.*)/mi.exec(lines[i])
+      if (result) {
+        it.description = result[1].trim()
+        continue
+      }
+    }
   }
 
   return interfaces
@@ -185,7 +248,7 @@ exports.getInterfaceMAC = function (device) {
     address = MAC_ADDRESS_RE.exec(output)
     return address && exports.normalize(address[0])
   } else if (process.platform === 'win32') {
-    console.error('No windows support yet - PR welcome!')
+    console.error('No windows support for this method yet - PR welcome!')
   }
 }
 
@@ -246,8 +309,70 @@ exports.setInterfaceMAC = function (device, mac, port) {
       throw new Error('Unable to change MAC address')
     }
   } else if (process.platform === 'win32') {
-    console.error('No windows support yet - PR welcome!')
+    // Locate adapter's registry and update network address (mac)
+    var regKey = new Winreg({
+      hive: Winreg.HKLM,
+      key: WIN_REGISTRY_PATH
+    })
+
+    regKey.keys(function (err, keys) {
+      if (err) {
+        console.log('ERROR: ' + err)
+      } else {
+        // Loop over all available keys and find the right adapter
+        for (var i = 0; i < keys.length; i++) {
+          exports.tryWindowsKey(keys[i].key, mac, device)
+        }
+      }
+    })
   }
+}
+
+/**
+ * Tries to set the "NetworkAddress" value on the specified registry key for given `device` to `mac`.
+ *
+ * @param {string} key
+ * @param {string} device
+ * @param {string} mac
+ */
+exports.tryWindowsKey = function (key, mac, device) {
+  // Skip the Properties key to avoid problems with permissions
+  if (key.indexOf('Properties') > -1) {
+    return false
+  }
+
+  var networkAdapterKeyPath = new Winreg({
+    hive: Winreg.HKLM,
+    key: key
+  })
+
+  // we need to format the MAC a bit for Windows
+  mac = mac.replace(/:/g, '')
+
+  networkAdapterKeyPath.values(function (err, values) {
+    var gotAdapter = false
+    if (err) {
+      console.log('ERROR: ' + err)
+    } else {
+      for (var x = 0; x < values.length; x++) {
+        if (values[x].name === 'AdapterModel') {
+          gotAdapter = true
+          break
+        }
+      }
+
+      if (gotAdapter) {
+        networkAdapterKeyPath.set('NetworkAddress', 'REG_SZ', mac, function () {
+          try {
+            cp.execSync('netsh interface set interface "' + device + '" disable')
+            cp.execSync('netsh interface set interface "' + device + '" enable')
+          } catch (err) {
+            throw new Error('Unable to restart device, is the cmd running as admin?')
+          }
+        })
+      }
+    }
+  })
 }
 
 /**
@@ -270,7 +395,20 @@ exports.random = function (localAdmin) {
     [ 0x08, 0x00, 0x27 ]  // Sun Virtual Box
   ]
 
+  // Windows needs specific prefixes sometimes
+  // http://www.wikihow.com/Change-a-Computer's-Mac-Address-in-Windows
+  var windowsPrefixes = [
+    'D2',
+    'D6',
+    'DA',
+    'DE'
+  ]
+
   var vendor = vendors[Math.floor(Math.random() * vendors.length)]
+
+  if (process.platform === 'win32') {
+    vendor[0] = windowsPrefixes[random(0, 3)]
+  }
 
   var mac = [
     vendor[0],

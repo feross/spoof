@@ -17,6 +17,7 @@
     "chalk": "^1.0.0",
     "minimist": "^1.1.0",
     "shell-quote": "^1.4.1",
+    "winreg": "^1.1.1",
     "zero-fill": "^2.1.0"
   },
   "devDependencies": {
