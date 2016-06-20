@@ -113,7 +113,7 @@ computer. OS X doesn't preserve changes to your MAC address between restarts.
 
 If you need Windows support, consider using the Python version of this program,
 [SpoofMAC](https://github.com/feross/SpoofMAC). Or, please send a PR with Windows
-support and I'll accept it. You can see [how it's implemented in the Python version](https://github.com/feross/SpoofMAC/blob/master/spoofmac/interface.py#L118).
+support and I'll accept it. You can see [how it's implemented in the Python version](https://github.com/feross/SpoofMAC/blob/master/spoofmac/interface.py#L199-L364).
 Thanks!
 
 ### automatically set my MAC address on startup
