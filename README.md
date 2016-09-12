@@ -25,7 +25,7 @@ Here are some easy install instructions for complete beginners.
 3. Install **spoof** by typing this command and pressing `Enter`.
 
   ```bash
-  sudo npm install spoof -g
+  npm install spoof -g
   ```
 
   That's it! **spoof** is installed.
