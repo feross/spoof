@@ -104,24 +104,22 @@ if (cmd === 'reset') {
   process.exit(9)
 }
 
-if (cmd == 'rotate') {
-  var interfaces
+if (cmd === 'rotate') {
   try {
     interfaces = spoof.findInterfaces(targets)
   } catch (err) {
     error(err)
   }
 
-  interfaces.forEach(function(i) {
+  interfaces.forEach(function (i) {
     if (i.currentAddress && i.currentAddress !== i.address) {
       var mac = spoof.random(argv.local)
       setMACAddress(i.device, mac, i.port)
-      console.log("Rotating MAC for " + i.device);
+      console.log('Rotating MAC for ' + i.device)
     }
   })
   process.exit(0)
 }
-
 
 if (cmd === 'normalize') {
   mac = argv._[1]
