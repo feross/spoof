@@ -109,6 +109,11 @@ spoof reset wi-fi
 On OS X, another option to reset your MAC address is to simply restart your
 computer. OS X doesn't preserve changes to your MAC address between restarts.
 
+### linux support?
+
+Linux support requires the `ifconfig` utility to be installed. It comes
+pre-installed with most Linux distributions.
+
 ### windows support?
 
 If you need Windows support, consider using the Python version of this program,
