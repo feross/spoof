@@ -8,7 +8,7 @@ if (!cp.execSync) {
   process.exit(1)
 }
 
-// Path to Airport binary on 10.7, 10.8, and 10.9 (might be different on older OS X)
+// Path to Airport binary on macOS 10.7+
 var PATH_TO_AIRPORT = '/System/Library/PrivateFrameworks/Apple80211.framework/Resources/airport'
 
 // Windows registry key for interface MAC. Checked on Windows 7
@@ -268,8 +268,10 @@ exports.setInterfaceMAC = function (device, mac, port) {
     throw new Error(mac + ' is not a valid MAC address')
   }
 
+  var isWirelessPort = port && WIRELESS_PORT_NAMES.indexOf(port.toLowerCase()) >= 0
+
   if (process.platform === 'darwin') {
-    if (port && port.toLowerCase().indexOf(WIRELESS_PORT_NAMES) >= 0) {
+    if (isWirelessPort) {
       // Turn on the device, assuming it's an airport device.
       try {
         cp.execSync(quote(['networksetup', '-setairportpower', device, 'on']))
@@ -292,12 +294,14 @@ exports.setInterfaceMAC = function (device, mac, port) {
       throw new Error('Unable to change MAC address')
     }
 
-    // Associate airport with known network (if any)
-    // Note: This does not work on OS X 10.9 due to changes in the Airport utility
-    try {
-      cp.execSync('networksetup -detectnewhardware')
-    } catch (err) {
-      throw new Error('Unable to associate with known networks')
+    // Restart airport so it will associate with known networks (if any)
+    if (isWirelessPort) {
+      try {
+        cp.execSync(quote(['networksetup', '-setairportpower', device, 'off']))
+        cp.execSync(quote(['networksetup', '-setairportpower', device, 'on']))
+      } catch (err) {
+        throw new Error('Unable to set restart wifi device')
+      }
     }
   } else if (process.platform === 'linux') {
     // Set the device's mac address.
