@@ -1,4 +1,4 @@
-# spoof [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url]
+# spoof [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url]
 
 [travis-image]: https://img.shields.io/travis/feross/spoof/master.svg
 [travis-url]: https://travis-ci.org/feross/spoof
@@ -6,6 +6,8 @@
 [npm-url]: https://npmjs.org/package/spoof
 [downloads-image]: https://img.shields.io/npm/dm/spoof.svg
 [downloads-url]: https://npmjs.org/package/spoof
+[standard-image]: https://img.shields.io/badge/code_style-standard-brightgreen.svg
+[standard-url]: https://standardjs.com
 
 ### Easily spoof your MAC address in OS X & Linux!
 
