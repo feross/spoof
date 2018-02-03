@@ -93,7 +93,7 @@ function randomize (devices) {
       throw new Error('Could not find device for ' + device)
     }
 
-    var mac = spoof.random(argv.local)
+    var mac = spoof.randomize(argv.local)
     setMACAddress(it.device, mac, it.port)
   })
 }

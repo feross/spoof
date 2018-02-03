@@ -2,7 +2,7 @@ module.exports = {
   findInterface,
   findInterfaces,
   normalize,
-  random,
+  randomize,
   setInterfaceMAC
 }
 
@@ -267,7 +267,7 @@ function setInterfaceMAC (device, mac, port) {
     throw new Error(mac + ' is not a valid MAC address')
   }
 
-  var isWirelessPort = port && WIRELESS_PORT_NAMES.indexOf(port.toLowerCase()) >= 0
+  var isWirelessPort = port && port.toLowerCase() === 'wi-fi'
 
   if (process.platform === 'darwin') {
     if (isWirelessPort) {
@@ -383,7 +383,7 @@ function tryWindowsKey (key, mac, device) {
  * @param  {boolean} localAdmin  locally administered address
  * @return {string}
  */
-function random (localAdmin) {
+function randomize (localAdmin) {
   // Randomly assign a VM vendor's MAC address prefix, which should
   // decrease chance of colliding with existing device's addresses.
 
@@ -407,7 +407,7 @@ function random (localAdmin) {
     'DE'
   ]
 
-  var vendor = vendors[Math.floor(Math.random() * vendors.length)]
+  var vendor = vendors[random(0, vendors.length - 1)]
 
   if (process.platform === 'win32') {
     vendor[0] = windowsPrefixes[random(0, 3)]
