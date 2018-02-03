@@ -1,11 +1,9 @@
 module.exports = {
-  WIRELESS_PORT_NAMES,
+  findInterface,
   findInterfaces,
   normalize,
-  getInterfaceMAC,
-  findInterface,
-  setInterfaceMAC,
-  random
+  random,
+  setInterfaceMAC
 }
 
 var cp = require('child_process')
@@ -26,9 +24,6 @@ var MAC_ADDRESS_RE = /([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})[:-
 // Regex to validate a MAC address in cisco-style
 // Example: 0123.4567.89ab
 var CISCO_MAC_ADDRESS_RE = /([0-9A-F]{0,4})\.([0-9A-F]{0,4})\.([0-9A-F]{0,4})/i
-
-// The possible port names for wireless devices as returned by networksetup.
-var WIRELESS_PORT_NAMES = ['wi-fi', 'airport']
 
 /**
  * Returns the list of interfaces found on this machine as reported by the

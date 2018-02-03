@@ -15,7 +15,7 @@ if (argv.v || argv.version) {
 if (cmd === 'list' || cmd === 'ls') {
   var targets = []
   if (argv.wifi) {
-    targets = spoof.WIRELESS_PORT_NAMES
+    targets.push('wi-fi')
   }
 
   var interfaces
