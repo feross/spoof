@@ -3,27 +3,124 @@
 var chalk = require('chalk')
 var minimist = require('minimist')
 var spoof = require('../')
+var { stripIndent } = require('common-tags')
 
-var argv = minimist(process.argv.slice(2))
+var argv = minimist(process.argv.slice(2), {
+  alias: {
+    v: version
+  }
+})
 var cmd = argv._[0]
 
-if (argv.v || argv.version) {
-  console.log(require('../package.json').version)
-  process.exit(0)
+try {
+  init()
+} catch (err) {
+  console.error(chalk.red('Error:', err.message))
+  process.exitCode = -1
 }
 
-if (cmd === 'list' || cmd === 'ls') {
+function init () {
+  if (cmd === 'version' || argv.version) {
+    version()
+  } else if (cmd === 'list' || cmd === 'ls') {
+    list()
+  } else if (cmd === 'set') {
+    const mac = argv._[1]
+    const devices = argv._.slice(2)
+    set(mac, devices)
+  } else if (cmd === 'randomize') {
+    const devices = argv._.slice(1)
+    randomize(devices)
+  } else if (cmd === 'reset') {
+    const devices = argv._.slice(1)
+    reset(devices)
+  } else if (cmd === 'normalize') {
+    const mac = argv._[1]
+    normalize(mac)
+  } else {
+    help()
+  }
+}
+
+function help () {
+  const message = stripIndent`
+    spoof - Spoof your MAC address
+
+    Example (randomize MAC address on macOS):
+      spoof randomize en0
+
+    Usage:
+      spoof list [--wifi]                     List available devices.
+      spoof set <mac> <devices>...            Set device MAC address.
+      spoof randomize [--local] <devices>...  Set device MAC address randomly.
+      spoof reset <devices>...                Reset device MAC address to default.
+      spoof normalize <mac>                   Given a MAC address, normalize it.
+      spoof help                              Shows this help message.
+      spoof version | --version | -v          Show package version.
+
+    Options:
+      --wifi          Try to only show wireless interfaces.
+      --local         Set the locally administered flag on randomized MACs.
+  `
+  console.log(message)
+}
+
+function version () {
+  console.log(require('../package.json').version)
+}
+
+function set (mac, devices) {
+  devices.forEach(function (device) {
+    var it = spoof.findInterface(device)
+
+    if (!it) {
+      throw new Error('Could not find device for ' + device)
+    }
+
+    setMACAddress(it.device, mac, it.port)
+  })
+}
+
+function normalize (mac) {
+  console.log(spoof.normalize(mac))
+}
+
+function randomize (devices) {
+  devices.forEach(function (device) {
+    var it = spoof.findInterface(device)
+
+    if (!it) {
+      throw new Error('Could not find device for ' + device)
+    }
+
+    var mac = spoof.random(argv.local)
+    setMACAddress(it.device, mac, it.port)
+  })
+}
+
+function reset (devices) {
+  devices.forEach(function (device) {
+    var it = spoof.findInterface(device)
+
+    if (!it) {
+      throw new Error('Could not find device for ' + device)
+    }
+
+    if (!it.address) {
+      throw new Error('Could not read hardware MAC address for ' + device)
+    }
+
+    setMACAddress(it.device, it.address, it.port)
+  })
+}
+
+function list () {
   var targets = []
   if (argv.wifi) {
     targets.push('wi-fi')
   }
 
-  var interfaces
-  try {
-    interfaces = spoof.findInterfaces(targets)
-  } catch (err) {
-    error(err)
-  }
+  var interfaces = spoof.findInterfaces(targets)
 
   interfaces.forEach(function (it) {
     var line = []
@@ -36,117 +133,12 @@ if (cmd === 'list' || cmd === 'ls') {
     }
     console.log(line.join(' '))
   })
-  process.exit(0)
-}
-
-var devices, mac
-if (cmd === 'set') {
-  mac = argv._[1]
-  devices = argv._.slice(2)
-
-  devices.forEach(function (device) {
-    var it
-    try {
-      it = spoof.findInterface(device)
-    } catch (err) {
-      error(err)
-    }
-
-    if (!it) {
-      error(new Error('Could not find device for ' + device))
-    }
-
-    setMACAddress(it.device, mac, it.port)
-  })
-  process.exit(0)
-}
-
-if (cmd === 'randomize') {
-  devices = argv._.slice(1)
-  devices.forEach(function (device) {
-    var it
-    try {
-      it = spoof.findInterface(device)
-    } catch (err) {
-      error(err)
-    }
-
-    if (!it) {
-      error(new Error('Could not find device for ' + device))
-    }
-
-    var mac = spoof.random(argv.local)
-    setMACAddress(it.device, mac, it.port)
-  })
-  process.exit(0)
-}
-
-if (cmd === 'reset') {
-  devices = argv._.slice(1)
-  devices.forEach(function (device) {
-    var it
-    try {
-      it = spoof.findInterface(device)
-    } catch (err) {
-      error(err)
-    }
-
-    if (!it) {
-      error(new Error('Could not find device for ' + device))
-    }
-
-    if (!it.address) {
-      error(new Error('Could not read hardware MAC address for ' + device))
-    }
-
-    setMACAddress(it.device, it.address, it.port)
-  })
-  process.exit(9)
-}
-
-if (cmd === 'normalize') {
-  mac = argv._[1]
-  console.log(spoof.normalize(mac))
-  process.exit(0)
-}
-
-printHelp()
-
-function printHelp () {
-  console.log('SpoofMAC - Easily spoof your MAC address in OS X & Linux')
-  console.log('')
-  console.log('Usage:')
-  console.log('  spoof list [--wifi]                     List available devices.')
-  console.log('  spoof set <mac> <devices>...            Set device MAC address.')
-  console.log('  spoof randomize [--local] <devices>...  Set device MAC address randomly.')
-  console.log('  spoof reset <devices>...                Reset device MAC address to default.')
-  console.log('  spoof normalize <mac>                   Given a MAC address, normalize it.')
-  console.log('  spoof --help | -h                       Shows this help message.')
-  console.log('  spoof --version | -v                    Show package version.')
-  console.log('')
-  console.log('Options:')
-  console.log('  --wifi          Try to only show wireless interfaces.')
-  console.log('  --local         Set the locally administered flag on randomized MACs.')
-  console.log('')
 }
 
 function setMACAddress (device, mac, port) {
   if (process.platform !== 'win32' && process.getuid() !== 0) {
-    error(new Error('Must run as root (or using sudo) to change network settings'))
+    throw new Error('Must run as root (or using sudo) to change network settings')
   }
 
-  try {
-    spoof.setInterfaceMAC(device, mac, port)
-  } catch (err) {
-    error(err)
-  }
-}
-
-/**
- * Print error and terminate the program
- * @param  {Error} err
- */
-function error (err) {
-  console.error(chalk.red('Error:', err.message))
-  process.exit(-1)
+  spoof.setInterfaceMAC(device, mac, port)
 }
