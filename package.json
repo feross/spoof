@@ -5,11 +5,9 @@
   "author": {
     "name": "Feross Aboukhadijeh",
     "email": "feross@feross.org",
-    "url": "http://feross.org/"
+    "url": "https://feross.org"
   },
-  "bin": {
-    "spoof": "./bin/cmd.js"
-  },
+  "bin": "./bin/cmd.js",
   "bugs": {
     "url": "https://github.com/feross/spoof/issues"
   },
@@ -27,17 +25,17 @@
   },
   "homepage": "http://feross.org/spoofmac/",
   "keywords": [
-    "spoof",
     "MAC address",
-    "mac",
-    "spoofmac",
-    "spoof mac address",
-    "macchanger",
+    "address",
     "change",
+    "mac",
+    "macchanger",
+    "mad science",
     "modify",
     "set mac",
-    "address",
-    "mad science"
+    "spoof",
+    "spoof mac address",
+    "spoofmac"
   ],
   "license": "MIT",
   "main": "index.js",
