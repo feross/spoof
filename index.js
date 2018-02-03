@@ -13,11 +13,6 @@ var quote = require('shell-quote').quote
 var zeroFill = require('zero-fill')
 var Winreg = require('winreg')
 
-if (!cp.execSync) {
-  console.error('Error: Missing child_process.execSync. Please use node 0.12 or iojs.')
-  process.exit(1)
-}
-
 // Path to Airport binary on macOS 10.7+
 var PATH_TO_AIRPORT = '/System/Library/PrivateFrameworks/Apple80211.framework/Resources/airport'
 
