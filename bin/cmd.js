@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 
-var chalk = require('chalk')
-var minimist = require('minimist')
-var spoof = require('../')
-var { stripIndent } = require('common-tags')
+const chalk = require('chalk')
+const minimist = require('minimist')
+const spoof = require('../')
+const { stripIndent } = require('common-tags')
 
-var argv = minimist(process.argv.slice(2), {
+const argv = minimist(process.argv.slice(2), {
   alias: {
     v: version
   }
 })
-var cmd = argv._[0]
+const cmd = argv._[0]
 
 try {
   init()
@@ -70,8 +70,8 @@ function version () {
 }
 
 function set (mac, devices) {
-  devices.forEach(function (device) {
-    var it = spoof.findInterface(device)
+  devices.forEach(device => {
+    const it = spoof.findInterface(device)
 
     if (!it) {
       throw new Error('Could not find device for ' + device)
@@ -86,21 +86,21 @@ function normalize (mac) {
 }
 
 function randomize (devices) {
-  devices.forEach(function (device) {
-    var it = spoof.findInterface(device)
+  devices.forEach(device => {
+    const it = spoof.findInterface(device)
 
     if (!it) {
       throw new Error('Could not find device for ' + device)
     }
 
-    var mac = spoof.randomize(argv.local)
+    const mac = spoof.randomize(argv.local)
     setMACAddress(it.device, mac, it.port)
   })
 }
 
 function reset (devices) {
-  devices.forEach(function (device) {
-    var it = spoof.findInterface(device)
+  devices.forEach(device => {
+    const it = spoof.findInterface(device)
 
     if (!it) {
       throw new Error('Could not find device for ' + device)
@@ -115,15 +115,15 @@ function reset (devices) {
 }
 
 function list () {
-  var targets = []
+  const targets = []
   if (argv.wifi) {
     targets.push('wi-fi')
   }
 
-  var interfaces = spoof.findInterfaces(targets)
+  const interfaces = spoof.findInterfaces(targets)
 
-  interfaces.forEach(function (it) {
-    var line = []
+  interfaces.forEach(it => {
+    const line = []
     line.push('-', chalk.bold.green(it.port), 'on device', chalk.bold.green(it.device))
     if (it.address) {
       line.push('with MAC address', chalk.bold.cyan(it.address))

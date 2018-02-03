@@ -6,24 +6,24 @@ module.exports = {
   setInterfaceMAC
 }
 
-var cp = require('child_process')
-var quote = require('shell-quote').quote
-var zeroFill = require('zero-fill')
-var Winreg = require('winreg')
+const cp = require('child_process')
+const quote = require('shell-quote').quote
+const zeroFill = require('zero-fill')
+const Winreg = require('winreg')
 
 // Path to Airport binary on macOS 10.7+
-var PATH_TO_AIRPORT = '/System/Library/PrivateFrameworks/Apple80211.framework/Resources/airport'
+const PATH_TO_AIRPORT = '/System/Library/PrivateFrameworks/Apple80211.framework/Resources/airport'
 
 // Windows registry key for interface MAC. Checked on Windows 7
-var WIN_REGISTRY_PATH = '\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}'
+const WIN_REGISTRY_PATH = '\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4D36E972-E325-11CE-BFC1-08002BE10318}'
 
 // Regex to validate a MAC address
 // Example: 00-00-00-00-00-00 or 00:00:00:00:00:00 or 000000000000
-var MAC_ADDRESS_RE = /([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})/i
+const MAC_ADDRESS_RE = /([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})[:-]?([0-9A-F]{1,2})/i
 
 // Regex to validate a MAC address in cisco-style
 // Example: 0123.4567.89ab
-var CISCO_MAC_ADDRESS_RE = /([0-9A-F]{0,4})\.([0-9A-F]{0,4})\.([0-9A-F]{0,4})/i
+const CISCO_MAC_ADDRESS_RE = /([0-9A-F]{0,4})\.([0-9A-F]{0,4})\.([0-9A-F]{0,4})/i
 
 /**
  * Returns the list of interfaces found on this machine as reported by the
@@ -32,191 +32,207 @@ var CISCO_MAC_ADDRESS_RE = /([0-9A-F]{0,4})\.([0-9A-F]{0,4})\.([0-9A-F]{0,4})/i
  * @return {Array.<Object>)}
  */
 function findInterfaces (targets) {
-  targets = targets || []
+  if (!targets) targets = []
 
-  targets = targets.map(function (target) {
-    return target.toLowerCase()
-  })
-
-  var output, interfaces, details, result, i, port, device, address, it, j, target, lines
+  targets = targets.map(target => target.toLowerCase())
 
   if (process.platform === 'darwin') {
-    // Parse the output of `networksetup -listallhardwareports` which gives
-    // us 3 fields per port:
-    // - the port name,
-    // - the device associated with this port, if any,
-    // - the MAC address, if any, otherwise 'N/A'
-
-    try {
-      output = cp.execSync('networksetup -listallhardwareports').toString()
-    } catch (err) {
-      throw err
-    }
-    details = []
-    while (true) {
-      result = /(?:Hardware Port|Device|Ethernet Address): (.+)/.exec(output)
-      if (!result || !result[1]) {
-        break
-      }
-      details.push(result[1])
-      output = output.slice(result.index + result[1].length)
-    }
-
-    interfaces = [] // to return
-
-    // Split the results into chunks of 3 (for our three fields) and yield
-    // those that match `targets`.
-    for (i = 0; i < details.length; i += 3) {
-      port = details[i]
-      device = details[i + 1]
-      address = details[i + 2]
-
-      address = MAC_ADDRESS_RE.exec(address.toUpperCase())
-      if (address) {
-        address = normalize(address[0])
-      }
-
-      it = {
-        address: address,
-        currentAddress: getInterfaceMAC(device),
-        device: device,
-        port: port
-      }
-
-      if (targets.length === 0) {
-        // Not trying to match anything in particular, return everything.
-        interfaces.push(it)
-        continue
-      }
-
-      for (j = 0; j < targets.length; j++) {
-        target = targets[j]
-        if (target === port.toLowerCase() || target === device.toLowerCase()) {
-          interfaces.push(it)
-          break
-        }
-      }
-    }
+    return findInterfacesDarwin(targets)
   } else if (process.platform === 'linux') {
-    // Parse the output of `ifconfig` which gives us:
-    // - the adapter description
-    // - the adapter name/device associated with this, if any,
-    // - the MAC address, if any
-    try {
-      output = cp.execSync('ifconfig', { stdio: 'pipe' }).toString()
-    } catch (err) {
-      throw err
-    }
-
-    details = []
-    while (true) {
-      result = /(.*?)HWaddr(.*)/mi.exec(output)
-      if (!result || !result[1] || !result[2]) {
-        break
-      }
-      details.push(result[1], result[2])
-      output = output.slice(result.index + result[0].length)
-    }
-
-    interfaces = []
-
-    for (i = 0; i < details.length; i += 2) {
-      var s = details[i].split(':')
-      if (s.length >= 2) {
-        device = s[0].split(' ')[0]
-        port = s[1].trim()
-      }
-
-      address = details[i + 1].trim()
-      if (address) {
-        address = normalize(address)
-      }
-
-      it = {
-        address: address,
-        currentAddress: getInterfaceMAC(device),
-        device: device,
-        port: port
-      }
-
-      if (targets.length === 0) {
-        // Not trying to match anything in particular, return everything.
-        interfaces.push(it)
-        continue
-      }
-
-      for (j = 0; j < targets.length; j++) {
-        target = targets[j]
-        if (target === port.toLowerCase() || target === device.toLowerCase()) {
-          interfaces.push(it)
-          break
-        }
-      }
-    }
+    return findInterfacesLinux(targets)
   } else if (process.platform === 'win32') {
-    try {
-      output = cp.execSync('ipconfig /all', { stdio: 'pipe' }).toString()
-    } catch (err) {
-      throw err
+    return findInterfacesWin32(targets)
+  }
+}
+
+function findInterfacesDarwin (targets) {
+  // Parse the output of `networksetup -listallhardwareports` which gives
+  // us 3 fields per port:
+  // - the port name,
+  // - the device associated with this port, if any,
+  // - the MAC address, if any, otherwise 'N/A'
+
+  let output
+  try {
+    output = cp.execSync('networksetup -listallhardwareports').toString()
+  } catch (err) {
+    throw err
+  }
+  const details = []
+  while (true) {
+    const result = /(?:Hardware Port|Device|Ethernet Address): (.+)/.exec(output)
+    if (!result || !result[1]) {
+      break
+    }
+    details.push(result[1])
+    output = output.slice(result.index + result[1].length)
+  }
+
+  const interfaces = [] // to return
+
+  // Split the results into chunks of 3 (for our three fields) and yield
+  // those that match `targets`.
+  for (let i = 0; i < details.length; i += 3) {
+    const port = details[i]
+    const device = details[i + 1]
+    let address = details[i + 2]
+
+    address = MAC_ADDRESS_RE.exec(address.toUpperCase())
+    if (address) {
+      address = normalize(address[0])
     }
 
-    details = []
-    interfaces = []
-    lines = output.split('\n')
-    it = false
-    for (i = 0; i < lines.length; i++) {
-      // Check if new device
-      if (lines[i].substr(0, 1).match(/[A-Z]/)) {
-        if (it) {
-          if (targets.length === 0) {
-            // Not trying to match anything in particular, return everything.
-            interfaces.push(it)
-          } else {
-            for (j = 0; j < targets.length; j++) {
-              target = targets[j]
-              if (target === it.port.toLowerCase() || target === it.device.toLowerCase()) {
-                interfaces.push(it)
-                break
-              }
-            }
-          }
-        }
+    const it = {
+      address: address,
+      currentAddress: getInterfaceMAC(device),
+      device: device,
+      port: port
+    }
 
-        it = {
-          port: '',
-          device: ''
-        }
+    if (targets.length === 0) {
+      // Not trying to match anything in particular, return everything.
+      interfaces.push(it)
+      continue
+    }
 
-        result = /adapter (.+?):/.exec(lines[ i ])
-        if (!result) {
-          continue
-        }
-
-        it.device = result[1]
-      }
-
-      if (!it) {
-        continue
-      }
-
-      // Try to find address
-      result = /Physical Address.+?:(.*)/mi.exec(lines[i])
-      if (result) {
-        it.address = normalize(result[1].trim())
-        it.currentAddress = it.address
-        continue
-      }
-
-      // Try to find description
-      result = /description.+?:(.*)/mi.exec(lines[i])
-      if (result) {
-        it.description = result[1].trim()
-        continue
+    for (let j = 0; j < targets.length; j++) {
+      let target = targets[j]
+      if (target === port.toLowerCase() || target === device.toLowerCase()) {
+        interfaces.push(it)
+        break
       }
     }
   }
 
   return interfaces
+}
+
+function findInterfacesLinux (targets) {
+  // Parse the output of `ifconfig` which gives us:
+  // - the adapter description
+  // - the adapter name/device associated with this, if any,
+  // - the MAC address, if any
+
+  let output
+  try {
+    output = cp.execSync('ifconfig', { stdio: 'pipe' }).toString()
+  } catch (err) {
+    throw err
+  }
+
+  const details = []
+  while (true) {
+    const result = /(.*?)HWaddr(.*)/mi.exec(output)
+    if (!result || !result[1] || !result[2]) {
+      break
+    }
+    details.push(result[1], result[2])
+    output = output.slice(result.index + result[0].length)
+  }
+
+  const interfaces = []
+
+  for (let i = 0; i < details.length; i += 2) {
+    const s = details[i].split(':')
+
+    let device, port
+    if (s.length >= 2) {
+      device = s[0].split(' ')[0]
+      port = s[1].trim()
+    }
+
+    let address = details[i + 1].trim()
+    if (address) {
+      address = normalize(address)
+    }
+
+    const it = {
+      address: address,
+      currentAddress: getInterfaceMAC(device),
+      device: device,
+      port: port
+    }
+
+    if (targets.length === 0) {
+      // Not trying to match anything in particular, return everything.
+      interfaces.push(it)
+      continue
+    }
+
+    for (let j = 0; j < targets.length; j++) {
+      const target = targets[j]
+      if (target === port.toLowerCase() || target === device.toLowerCase()) {
+        interfaces.push(it)
+        break
+      }
+    }
+  }
+
+  return interfaces
+}
+
+function findInterfacesWin32 (targets) {
+  let output
+  try {
+    output = cp.execSync('ipconfig /all', { stdio: 'pipe' }).toString()
+  } catch (err) {
+    throw err
+  }
+
+  const interfaces = []
+  const lines = output.split('\n')
+  let it = false
+  for (let i = 0; i < lines.length; i++) {
+    // Check if new device
+    let result
+    if (lines[i].substr(0, 1).match(/[A-Z]/)) {
+      if (it) {
+        if (targets.length === 0) {
+          // Not trying to match anything in particular, return everything.
+          interfaces.push(it)
+        } else {
+          for (let j = 0; j < targets.length; j++) {
+            const target = targets[j]
+            if (target === it.port.toLowerCase() || target === it.device.toLowerCase()) {
+              interfaces.push(it)
+              break
+            }
+          }
+        }
+      }
+
+      it = {
+        port: '',
+        device: ''
+      }
+
+      let result = /adapter (.+?):/.exec(lines[ i ])
+      if (!result) {
+        continue
+      }
+
+      it.device = result[1]
+    }
+
+    if (!it) {
+      continue
+    }
+
+    // Try to find address
+    result = /Physical Address.+?:(.*)/mi.exec(lines[i])
+    if (result) {
+      it.address = normalize(result[1].trim())
+      it.currentAddress = it.address
+      continue
+    }
+
+    // Try to find description
+    result = /description.+?:(.*)/mi.exec(lines[i])
+    if (result) {
+      it.description = result[1].trim()
+      continue
+    }
+  }
 }
 
 /**
@@ -225,7 +241,7 @@ function findInterfaces (targets) {
  * @return {Object}
  */
 function findInterface (target) {
-  var interfaces = findInterfaces([target])
+  const interfaces = findInterfaces([target])
   return interfaces && interfaces[0]
 }
 
@@ -235,16 +251,15 @@ function findInterface (target) {
  * @return {string}
  */
 function getInterfaceMAC (device) {
-  var output, address
-
   if (process.platform === 'darwin' || process.platform === 'linux') {
+    let output
     try {
       output = cp.execSync(quote(['ifconfig', device]), { stdio: 'pipe' }).toString()
     } catch (err) {
       return null
     }
 
-    address = MAC_ADDRESS_RE.exec(output)
+    const address = MAC_ADDRESS_RE.exec(output)
     return address && normalize(address[0])
   } else if (process.platform === 'win32') {
     console.error('No windows support for this method yet - PR welcome!')
@@ -267,7 +282,7 @@ function setInterfaceMAC (device, mac, port) {
     throw new Error(mac + ' is not a valid MAC address')
   }
 
-  var isWirelessPort = port && port.toLowerCase() === 'wi-fi'
+  const isWirelessPort = port && port.toLowerCase() === 'wi-fi'
 
   if (process.platform === 'darwin') {
     if (isWirelessPort) {
@@ -313,18 +328,18 @@ function setInterfaceMAC (device, mac, port) {
     }
   } else if (process.platform === 'win32') {
     // Locate adapter's registry and update network address (mac)
-    var regKey = new Winreg({
+    const regKey = new Winreg({
       hive: Winreg.HKLM,
       key: WIN_REGISTRY_PATH
     })
 
-    regKey.keys(function (err, keys) {
+    regKey.keys((err, keys) => {
       if (err) {
         console.log('ERROR: ' + err)
       } else {
         // Loop over all available keys and find the right adapter
-        for (var i = 0; i < keys.length; i++) {
-          tryWindowsKey(keys[i].key, mac, device)
+        for (let i = 0; i < keys.length; i++) {
+          tryWindowsKey(keys[i].key, device, mac)
         }
       }
     })
@@ -332,19 +347,20 @@ function setInterfaceMAC (device, mac, port) {
 }
 
 /**
- * Tries to set the "NetworkAddress" value on the specified registry key for given `device` to `mac`.
+ * Tries to set the "NetworkAddress" value on the specified registry key for given
+ * `device` to `mac`.
  *
  * @param {string} key
  * @param {string} device
  * @param {string} mac
  */
-function tryWindowsKey (key, mac, device) {
+function tryWindowsKey (key, device, mac) {
   // Skip the Properties key to avoid problems with permissions
   if (key.indexOf('Properties') > -1) {
     return false
   }
 
-  var networkAdapterKeyPath = new Winreg({
+  const networkAdapterKeyPath = new Winreg({
     hive: Winreg.HKLM,
     key: key
   })
@@ -352,12 +368,12 @@ function tryWindowsKey (key, mac, device) {
   // we need to format the MAC a bit for Windows
   mac = mac.replace(/:/g, '')
 
-  networkAdapterKeyPath.values(function (err, values) {
-    var gotAdapter = false
+  networkAdapterKeyPath.values((err, values) => {
+    let gotAdapter = false
     if (err) {
       console.log('ERROR: ' + err)
     } else {
-      for (var x = 0; x < values.length; x++) {
+      for (let x = 0; x < values.length; x++) {
         if (values[x].name === 'AdapterModel') {
           gotAdapter = true
           break
@@ -365,7 +381,7 @@ function tryWindowsKey (key, mac, device) {
       }
 
       if (gotAdapter) {
-        networkAdapterKeyPath.set('NetworkAddress', 'REG_SZ', mac, function () {
+        networkAdapterKeyPath.set('NetworkAddress', 'REG_SZ', mac, () => {
           try {
             cp.execSync('netsh interface set interface "' + device + '" disable')
             cp.execSync('netsh interface set interface "' + device + '" enable')
@@ -387,7 +403,7 @@ function randomize (localAdmin) {
   // Randomly assign a VM vendor's MAC address prefix, which should
   // decrease chance of colliding with existing device's addresses.
 
-  var vendors = [
+  const vendors = [
     [ 0x00, 0x05, 0x69 ], // VMware
     [ 0x00, 0x50, 0x56 ], // VMware
     [ 0x00, 0x0C, 0x29 ], // VMware
@@ -400,20 +416,20 @@ function randomize (localAdmin) {
 
   // Windows needs specific prefixes sometimes
   // http://www.wikihow.com/Change-a-Computer's-Mac-Address-in-Windows
-  var windowsPrefixes = [
+  const windowsPrefixes = [
     'D2',
     'D6',
     'DA',
     'DE'
   ]
 
-  var vendor = vendors[random(0, vendors.length - 1)]
+  const vendor = vendors[random(0, vendors.length - 1)]
 
   if (process.platform === 'win32') {
     vendor[0] = windowsPrefixes[random(0, 3)]
   }
 
-  var mac = [
+  const mac = [
     vendor[0],
     vendor[1],
     vendor[2],
@@ -435,10 +451,9 @@ function randomize (localAdmin) {
   }
 
   return mac
-    .map(function (byte) {
-      return zeroFill(2, byte.toString(16))
-    })
-    .join(':').toUpperCase()
+    .map(byte => zeroFill(2, byte.toString(16)))
+    .join(':')
+    .toUpperCase()
 }
 
 /**
@@ -454,10 +469,10 @@ function randomize (localAdmin) {
  * @return {string}
  */
 function normalize (mac) {
-  var m = CISCO_MAC_ADDRESS_RE.exec(mac)
+  let m = CISCO_MAC_ADDRESS_RE.exec(mac)
   if (m) {
-    var halfwords = m.slice(1)
-    mac = halfwords.map(function (halfword) {
+    const halfwords = m.slice(1)
+    mac = halfwords.map((halfword) => {
       return zeroFill(4, halfword)
     }).join('')
     return chunk(mac, 2).join(':').toUpperCase()
@@ -465,19 +480,17 @@ function normalize (mac) {
 
   m = MAC_ADDRESS_RE.exec(mac)
   if (m) {
-    var bytes = m.slice(1)
+    const bytes = m.slice(1)
     return bytes
-      .map(function (byte) {
-        return zeroFill(2, byte)
-      })
+      .map(byte => zeroFill(2, byte))
       .join(':')
       .toUpperCase()
   }
 }
 
 function chunk (str, n) {
-  var arr = []
-  for (var i = 0; i < str.length; i += n) {
+  const arr = []
+  for (let i = 0; i < str.length; i += n) {
     arr.push(str.slice(i, i + n))
   }
   return arr
@@ -486,13 +499,9 @@ function chunk (str, n) {
 /**
  * Return a random integer between min and max (inclusive).
  * @param  {number} min
- * @param  {number=} max
+ * @param  {number} max
  * @return {number}
  */
 function random (min, max) {
-  if (max == null) {
-    max = min
-    min = 0
-  }
   return min + Math.floor(Math.random() * (max - min + 1))
 }
