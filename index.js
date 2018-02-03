@@ -1,3 +1,13 @@
+module.exports = {
+  WIRELESS_PORT_NAMES,
+  findInterfaces,
+  normalize,
+  getInterfaceMAC,
+  findInterface,
+  setInterfaceMAC,
+  random
+}
+
 var cp = require('child_process')
 var quote = require('shell-quote').quote
 var zeroFill = require('zero-fill')
@@ -24,7 +34,6 @@ var CISCO_MAC_ADDRESS_RE = /([0-9A-F]{0,4})\.([0-9A-F]{0,4})\.([0-9A-F]{0,4})/i
 
 // The possible port names for wireless devices as returned by networksetup.
 var WIRELESS_PORT_NAMES = ['wi-fi', 'airport']
-exports.WIRELESS_PORT_NAMES = WIRELESS_PORT_NAMES
 
 /**
  * Returns the list of interfaces found on this machine as reported by the
@@ -32,7 +41,7 @@ exports.WIRELESS_PORT_NAMES = WIRELESS_PORT_NAMES
  * @param {Array.<string>|null} targets
  * @return {Array.<Object>)}
  */
-exports.findInterfaces = function (targets) {
+function findInterfaces (targets) {
   targets = targets || []
 
   targets = targets.map(function (target) {
@@ -74,12 +83,12 @@ exports.findInterfaces = function (targets) {
 
       address = MAC_ADDRESS_RE.exec(address.toUpperCase())
       if (address) {
-        address = exports.normalize(address[0])
+        address = normalize(address[0])
       }
 
       it = {
         address: address,
-        currentAddress: exports.getInterfaceMAC(device),
+        currentAddress: getInterfaceMAC(device),
         device: device,
         port: port
       }
@@ -130,12 +139,12 @@ exports.findInterfaces = function (targets) {
 
       address = details[i + 1].trim()
       if (address) {
-        address = exports.normalize(address)
+        address = normalize(address)
       }
 
       it = {
         address: address,
-        currentAddress: exports.getInterfaceMAC(device),
+        currentAddress: getInterfaceMAC(device),
         device: device,
         port: port
       }
@@ -203,7 +212,7 @@ exports.findInterfaces = function (targets) {
       // Try to find address
       result = /Physical Address.+?:(.*)/mi.exec(lines[i])
       if (result) {
-        it.address = exports.normalize(result[1].trim())
+        it.address = normalize(result[1].trim())
         it.currentAddress = it.address
         continue
       }
@@ -225,8 +234,8 @@ exports.findInterfaces = function (targets) {
  * @param  {string} target
  * @return {Object}
  */
-exports.findInterface = function (target) {
-  var interfaces = exports.findInterfaces([target])
+function findInterface (target) {
+  var interfaces = findInterfaces([target])
   return interfaces && interfaces[0]
 }
 
@@ -235,7 +244,7 @@ exports.findInterface = function (target) {
  * interface's hardware MAC address.
  * @return {string}
  */
-exports.getInterfaceMAC = function (device) {
+function getInterfaceMAC (device) {
   var output, address
 
   if (process.platform === 'darwin' || process.platform === 'linux') {
@@ -246,7 +255,7 @@ exports.getInterfaceMAC = function (device) {
     }
 
     address = MAC_ADDRESS_RE.exec(output)
-    return address && exports.normalize(address[0])
+    return address && normalize(address[0])
   } else if (process.platform === 'win32') {
     console.error('No windows support for this method yet - PR welcome!')
   }
@@ -263,7 +272,7 @@ exports.getInterfaceMAC = function (device) {
  * @param {string} mac
  * @param {string=} port
  */
-exports.setInterfaceMAC = function (device, mac, port) {
+function setInterfaceMAC (device, mac, port) {
   if (!MAC_ADDRESS_RE.exec(mac)) {
     throw new Error(mac + ' is not a valid MAC address')
   }
@@ -325,7 +334,7 @@ exports.setInterfaceMAC = function (device, mac, port) {
       } else {
         // Loop over all available keys and find the right adapter
         for (var i = 0; i < keys.length; i++) {
-          exports.tryWindowsKey(keys[i].key, mac, device)
+          tryWindowsKey(keys[i].key, mac, device)
         }
       }
     })
@@ -339,7 +348,7 @@ exports.setInterfaceMAC = function (device, mac, port) {
  * @param {string} device
  * @param {string} mac
  */
-exports.tryWindowsKey = function (key, mac, device) {
+function tryWindowsKey (key, mac, device) {
   // Skip the Properties key to avoid problems with permissions
   if (key.indexOf('Properties') > -1) {
     return false
@@ -384,7 +393,7 @@ exports.tryWindowsKey = function (key, mac, device) {
  * @param  {boolean} localAdmin  locally administered address
  * @return {string}
  */
-exports.random = function (localAdmin) {
+function random (localAdmin) {
   // Randomly assign a VM vendor's MAC address prefix, which should
   // decrease chance of colliding with existing device's addresses.
 
@@ -454,7 +463,7 @@ exports.random = function (localAdmin) {
  * @param  {string} mac
  * @return {string}
  */
-exports.normalize = function (mac) {
+function normalize (mac) {
   var m = CISCO_MAC_ADDRESS_RE.exec(mac)
   if (m) {
     var halfwords = m.slice(1)
@@ -474,8 +483,6 @@ exports.normalize = function (mac) {
       .join(':')
       .toUpperCase()
   }
-
-  // return None
 }
 
 function chunk (str, n) {
