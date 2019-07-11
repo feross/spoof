@@ -163,7 +163,7 @@ function findInterfacesLinux (targets) {
 }
 
 function findInterfacesWin32 (targets) {
-  let output = cp.execSync('ipconfig /all', { stdio: 'pipe' }).toString()
+  const output = cp.execSync('ipconfig /all', { stdio: 'pipe' }).toString()
 
   const interfaces = []
   const lines = output.split('\n')
