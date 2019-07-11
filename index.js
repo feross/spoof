@@ -52,12 +52,8 @@ function findInterfacesDarwin (targets) {
   // - the device associated with this port, if any,
   // - the MAC address, if any, otherwise 'N/A'
 
-  let output
-  try {
-    output = cp.execSync('networksetup -listallhardwareports').toString()
-  } catch (err) {
-    throw err
-  }
+  let output = cp.execSync('networksetup -listallhardwareports').toString()
+
   const details = []
   while (true) {
     const result = /(?:Hardware Port|Device|Ethernet Address): (.+)/.exec(output)
@@ -113,12 +109,7 @@ function findInterfacesLinux (targets) {
   // - the adapter name/device associated with this, if any,
   // - the MAC address, if any
 
-  let output
-  try {
-    output = cp.execSync('ifconfig', { stdio: 'pipe' }).toString()
-  } catch (err) {
-    throw err
-  }
+  let output = cp.execSync('ifconfig', { stdio: 'pipe' }).toString()
 
   const details = []
   while (true) {
@@ -172,12 +163,7 @@ function findInterfacesLinux (targets) {
 }
 
 function findInterfacesWin32 (targets) {
-  let output
-  try {
-    output = cp.execSync('ipconfig /all', { stdio: 'pipe' }).toString()
-  } catch (err) {
-    throw err
-  }
+  let output = cp.execSync('ipconfig /all', { stdio: 'pipe' }).toString()
 
   const interfaces = []
   const lines = output.split('\n')
