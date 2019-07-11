@@ -20,7 +20,7 @@
     "zero-fill": "^2.1.0"
   },
   "devDependencies": {
-    "standard": "*",
+    "standard": ">=13.0.1",
     "tape": "^4.0.0"
   },
   "homepage": "http://feross.org/spoofmac/",
