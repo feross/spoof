@@ -219,6 +219,7 @@ function findInterfacesWin32 (targets) {
       continue
     }
   }
+  return interfaces
 }
 
 /**
