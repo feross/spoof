@@ -13,15 +13,15 @@
   },
   "dependencies": {
     "chalk": "^4.1.0",
-    "common-tags": "^1.7.2",
-    "minimist": "^1.1.0",
-    "shell-quote": "^1.4.1",
-    "winreg": "^1.1.1",
-    "zero-fill": "^2.1.0"
+    "common-tags": "^1.8.0",
+    "minimist": "^1.2.5",
+    "shell-quote": "^1.7.2",
+    "winreg": "^1.2.4",
+    "zero-fill": "^2.2.4"
   },
   "devDependencies": {
     "standard": "*",
-    "tape": "^5.0.0"
+    "tape": "^5.0.1"
   },
   "homepage": "http://feross.org/spoofmac/",
   "keywords": [
