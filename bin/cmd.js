@@ -7,8 +7,11 @@ const { stripIndent } = require('common-tags')
 
 const argv = minimist(process.argv.slice(2), {
   alias: {
-    v: version
-  }
+    v: 'version'
+  },
+  boolean: [
+    'version'
+  ]
 })
 const cmd = argv._[0]
 
